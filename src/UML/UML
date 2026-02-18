@@ -2,55 +2,52 @@
 skinparam classAttributeIconSize 0
 skinparam monochrome true
 skinparam packageStyle rectangle
+skinparam shadowing false
 
 package "org.yourcompany.yourproject" {
 
     class ATM {
         {static} -teclat: Scanner
-        {static} -caixer: Caixer
-        {static} +main(args: String[])
-        {static} -demanarLogin()
-        {static} -mostrar_menu()
-        {static} -mostrar_comptes()
-        {static} -mostrar_moviments()
-        {static} -ingressar()
-        {static} -retirar()
-        {static} -transferir()
+        -banc: Banc
+        -clientActiu: Client
+        +main(args: String[])
+        -login(): void
+        -logout(): void
+        -mostrar_menu(): void
+    }
+
+    class Banc {
+        -nom: String
+        +validarClient(dni: String, pin: String): Client
     }
 
     class Caixer {
         -banc: Banc
         -clientConnectat: Client
-        +Caixer()
-        +login(dni: String, PIN: String): boolean
-        +mostrarComptes(): boolean
-        +mostrarMoviments(numeroCompte: String): boolean
+        +login(dni: String, pin: String): boolean
+        +logout(): void
         +ingressar(numero: String, quantitat: double): boolean
         +retirar(numero: String, quantitat: double): boolean
-        +transferir(origen: String, desti: String, quantitat: double): boolean
     }
 
     class Client {
         -dni: String
         -nom: String
-        -pin: String
         -intentsFallits: int
         -bloquejat: boolean
         +Client(dni: String, nom: String, pin: String)
         +comprovarPin(pinIntroduit: String): boolean
-        +resetIntents()
-        +getters/setters()
+        +resetIntents(): void
+        +getDni(): String
+        +getNom(): String
     }
 
     abstract class Compte {
         #numero: String
         #saldo: double
-        #titular: Client
         #interesAnual: double
-        #moviments: ArrayList<Moviment>
         {static} -comptador: int
         {static} -prefix: String
-        +Compte()
         +Compte(titular: Client, saldo: double)
         +ingressar(quantitat: double): boolean
         +retirar(quantitat: double): boolean
@@ -73,7 +70,7 @@ package "org.yourcompany.yourproject" {
     class Moviment {
         -dataHora: LocalDateTime
         -descripcio: String
-        -tipusMoviment: TipusMoviment
+        -tipus: TipusMoviment
         -quantitat: double
         +Moviment(desc: String, tipus: TipusMoviment, q: double)
     }
@@ -84,15 +81,31 @@ package "org.yourcompany.yourproject" {
         TRANSFERENCIA
     }
 
-    ' Relacions d'Herència
+    ' --- RELACIONS D'HERÈNCIA (Rúbrica: Fletxa correcta i polimorfisme) ---
     Compte <|-- CompteCorrent
     Compte <|-- CompteEstalvi
 
-    ' Relacions de dependència i composició
-    ATM ..> Caixer : usa
-    Caixer o-- Client : clientConnectat
-    Compte o-- Client : titular
-    Compte *-- Moviment : llista moviments
-    Moviment --> TipusMoviment
+    ' --- RELACIONS DE COMPOSICIÓ (Rúbrica: Diamant negre i dependència forta) ---
+    Compte "1" *-- "0..*" Moviment : historial
+
+    ' --- RELACIONS D'ASSOCIACIÓ I MULTIPLICITAT ---
+    
+    ' Banc — Client (Rúbrica: 1 a 0..*)
+    Banc "1" -- "0..*" Client : gestiona
+
+    ' Client — Compte (Rúbrica: 1 a 0..* i referència al titular)
+    Client "1" -- "0..*" Compte : titular_de
+
+    ' ATM — Banc (Rúbrica: Associació directa 1 a 1 i navegabilitat)
+    ATM "1" --> "1" Banc : depèn_de
+
+    ' ATM — Client (Rúbrica: 0..1 client connectat)
+    ATM "1" -- "0..1" Client : clientActiu
+
+    ' Caixer (Rúbrica: Un sol client connectat)
+    Caixer "1" -- "0..1" Client : sessió_activa
+
+    ' Moviment (Rúbrica: Ús de l'enum)
+    Moviment --> TipusMoviment : tipus
 }
 @enduml
