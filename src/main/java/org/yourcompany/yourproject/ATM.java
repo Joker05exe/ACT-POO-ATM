@@ -63,20 +63,48 @@ public class ATM {
     private static void demanarLogin() {
         String dni, pin;
         boolean correcte = false;
-        
+
         do {
             System.out.println("--- ACCÉS AL CAIXER ---");
             System.out.print("Introdueix el teu DNI: ");
             dni = teclat.next();
-            System.out.print("Ara el teu PIN: ");
-            pin = teclat.next();
-            
-            // Crido al mètode del caixer per veure si les dades són bones
-            if (caixer.login(dni, pin)) {
+
+            // Primer mirem si el DNI existeix al banc
+            if (!caixer.existeixClientPerDni(dni)) {
+                System.out.println("Aquest DNI no està registrat. Torna-ho a provar.");
+                continue; // Tornem a demanar el DNI
+            }
+
+            // Si el DNI existeix, permetem fins a 3 intents de PIN per aquest client
+            int intents = 0;
+            boolean pinCorrecte = false;
+            while (intents < 3 && !pinCorrecte) {
+                System.out.print("Ara el teu PIN: ");
+                pin = teclat.next();
+                pinCorrecte = caixer.loginPinPerClient(dni, pin);
+                if (!pinCorrecte) {
+                    intents++;
+                    if (intents < 3) System.out.println("PIN incorrecte. Torna-ho a intentar.");
+                }
+            }
+
+            if (pinCorrecte) {
                 correcte = true;
                 System.out.println("\nTot correcte. Hola de nou!");
             } else {
-                System.out.println("Dades incorrectes... torna a provar-ho, si us plau.");
+                long secsRestants = caixer.getSegonsBloqueigRestantsPerDni(dni);
+                if (secsRestants > 0) {
+                    long hores = secsRestants / 3600;
+                    long minuts = (secsRestants % 3600) / 60;
+                    long segons = secsRestants % 60;
+                    StringBuilder sb = new StringBuilder();
+                    if (hores > 0) sb.append(hores).append(" h ");
+                    if (minuts > 0) sb.append(minuts).append(" min ");
+                    sb.append(segons).append(" s");
+                    System.out.println("S'han superat els 3 intents de PIN per a aquest DNI. Compte bloquejat durant: " + sb.toString());
+                } else {
+                    System.out.println("S'han superat els 3 intents de PIN per a aquest DNI. Compte bloquejat.");
+                }
             }
         } while (!correcte);
     } 

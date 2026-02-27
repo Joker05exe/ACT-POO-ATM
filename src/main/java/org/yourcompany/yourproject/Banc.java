@@ -76,6 +76,21 @@ public class Banc {
         return null; // Si acaba el bucle i no hem trobat res, tornem null
     }
 
+    /**
+     * Busca un client pel seu DNI sense comprovar el PIN.
+     * Útil per separar la comprovació del DNI de la comprovació del PIN
+     * (per exemple, permet preguntar el PIN diverses vegades sense que
+     * el sistema compti intents per DNIs inexistents).
+     */
+    public Client buscarClientPerDni(String dni) {
+        for (Client cli : clients) {
+            if (cli != null && cli.getDni().equals(dni)) {
+                return cli;
+            }
+        }
+        return null;
+    }
+
     // --- OPERACIONS AMB ELS COMPTES ---
 
     /**
@@ -164,4 +179,28 @@ public class Banc {
             }
         }
     }
+     /**
+     * Esta compte està bloquejat?
+     */
+    public boolean estaCompteBloquejat(String numeroCompte, Client clientConnectat) {
+        for (Compte c : comptes) {
+            if (c != null && c.getNumero().equals(numeroCompte) && c.getTitular().equals(clientConnectat)) {
+                return c.estaBloquejat();
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Overload: comprova si un compte està bloquejat buscant només pel número de compte.
+     */
+    public boolean estaCompteBloquejat(String numeroCompte) {
+        for (Compte c : comptes) {
+            if (c != null && c.getNumero().equals(numeroCompte)) {
+                return c.estaBloquejat();
+            }
+        }
+        return false;
+    }
+
 }

@@ -12,6 +12,10 @@ public class Client {
     private String pin;
     private int intentsFallits;
     private boolean bloquejat;
+    // El moment (Instant) fins quan està bloquejat; si és null o passat, no està bloquejat
+    private java.time.Instant blockedUntil;
+    // Comptador de vegades que ha estat bloquejat per aplicar duracions escalonades
+    private int bloquejosCount;
 
     /**
      * Constructor per crear un client nou. 
@@ -22,7 +26,9 @@ public class Client {
         this.setPin(pin);
         this.setDni(dni);
         this.bloquejat = false;
-        this.intentsFallits = 0;
+    this.intentsFallits = 0;
+    this.blockedUntil = null;
+    this.bloquejosCount = 0;
     }
 
     public String getNom() {
@@ -100,7 +106,17 @@ public class Client {
     }
 
     public boolean isBloquejat() {
-        return bloquejat;
+        // Si està marcat com a bloquejat, comprovem si el temps ha expirat
+        if (!bloquejat) return false;
+        if (blockedUntil == null) return bloquejat;
+        if (java.time.Instant.now().isAfter(blockedUntil)) {
+            // El bloqueig ha expirat
+            this.bloquejat = false;
+            this.blockedUntil = null;
+            this.intentsFallits = 0;
+            return false;
+        }
+        return true;
     }
 
     /**
@@ -110,7 +126,11 @@ public class Client {
     public boolean comprovarPin(String pinIntroduit) {
 
         // Si ja t'he bloquejat, ni ho intentis
-        if (this.bloquejat) {
+        if (this.isBloquejat()) {
+            long secsRestants = getSegonsBloqueigRestants();
+            long mins = secsRestants / 60;
+            long secs = secsRestants % 60;
+            System.out.println("Compte bloquejat. Torna a provar d'aquí " + mins + " min i " + secs + " s.");
             return false;
         }
 
@@ -124,9 +144,28 @@ public class Client {
         this.intentsFallits++;
         if (this.intentsFallits >= 3) {
             this.bloquejat = true;
-            System.out.println("S'han superat els 3 intents. Compte bloquejat!");
+            this.intentsFallits = 0; // reset dels intents per a la següent ronda
+            // Augmentem el comptador de bloquejos per escalar la durada
+            this.bloquejosCount++;
+
+            int[] minuts = {1, 3, 5, 10, 30, 60};
+            int idx = Math.min(this.bloquejosCount - 1, minuts.length - 1);
+            int duradaMinuts = minuts[idx];
+            this.blockedUntil = java.time.Instant.now().plus(java.time.Duration.ofMinutes(duradaMinuts));
+
+            System.out.println("S'han superat els 3 intents. Compte bloquejat per " + duradaMinuts + " minuts.");
         }
         return false;
+    }
+
+    /**
+     * Retorna els segons restants del bloqueig (0 si no està bloquejat)
+     */
+    public long getSegonsBloqueigRestants() {
+        if (!this.bloquejat || this.blockedUntil == null) return 0;
+        java.time.Instant now = java.time.Instant.now();
+        if (now.isAfter(this.blockedUntil)) return 0;
+        return java.time.Duration.between(now, this.blockedUntil).getSeconds();
     }
 
     public void resetIntents(){

@@ -40,3 +40,22 @@ El projecte està organitzat en les següents classes dins del paquet `org.yourc
 2.  **Gestió de Comptes**: Possibilitat de veure el saldo i detalls de diversos comptes.
 3.  **Operacions Bancàries**: Ingressos, retirades i transferències entre comptes.
 4.  **Historial**: Registre complet de tots els moviments realitzats durant la sessió.
+
+## 🔒 Bloqueig temporal i nova validació de login
+
+S'ha afegit una millora al procés d'autenticació:
+
+- Primer es demana el **DNI** i es comprova que existeixi al banc (no s'aplica límit d'intents al DNI).
+- Si el DNI existeix, es permeten fins a **3 intents de PIN** per aquest client.
+- Si el PIN falla 3 cops, el client queda bloquejat **temporalment**. Les durades de bloqueig són escalonades segons el número de bloquejos consecutius: 1 min, 3 min, 5 min, 10 min, 30 min, 1 hora (i es manté 1 hora per a bloquejos posteriors).
+- Quan el bloqueig expira, els intents es resetegen i el client pot tornar a intentar el login.
+
+Credencials de prova incloses al banc per facilitar proves:
+
+- `11111111H` / `1111` (Alex)
+- `22222222J` / `2222` (Ana)
+- `33333333P` / `3333` (Andreu)
+- `44444444A` / `4444` (Pau)
+- `55555555K` / `5555` (Ina)
+
+Prova ràpida: inicia l'aplicació i introdueix un DNI d'exemple; si falles el PIN 3 vegades veuràs el missatge amb el temps restant de bloqueig.

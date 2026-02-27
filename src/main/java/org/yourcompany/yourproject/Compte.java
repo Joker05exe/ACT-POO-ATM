@@ -138,4 +138,12 @@ public class Compte {
         // Una descripció ràpida del compte per fer debugging
         return "Compte NÚM: " + numero + " | Saldo: " + saldo + "€ | Titular: " + titular.getNom();
     }
+
+    /**
+     * Indica si aquest compte està bloquejat. Per ara deleguem al estat
+     * del titular (si el client està bloquejat, considerem el compte bloquejat).
+     */
+    public boolean estaBloquejat() {
+        return this.titular != null && this.titular.isBloquejat();
+    }
 }

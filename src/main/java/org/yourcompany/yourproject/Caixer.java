@@ -34,6 +34,37 @@ public class Caixer {
     }
 
     /**
+     * Comprova si existeix un client amb aquest DNI (no comprova el PIN).
+     */
+    public boolean existeixClientPerDni(String dni) {
+        return banc.buscarClientPerDni(dni) != null;
+    }
+
+    /**
+     * Intent de login només comprovant el PIN per un client ja identificat pel DNI.
+     * Si el PIN és correcte, estableix el clientConnectat i retorna true.
+     */
+    public boolean loginPinPerClient(String dni, String pin) {
+        Client cli = banc.buscarClientPerDni(dni);
+        if (cli == null) return false;
+
+        boolean correcte = cli.comprovarPin(pin);
+        if (correcte) {
+            clientConnectat = cli;
+        }
+        return correcte;
+    }
+
+    /**
+     * Retorna els segons restants del bloqueig per a un DNI concret (0 si no està bloquejat)
+     */
+    public long getSegonsBloqueigRestantsPerDni(String dni) {
+        Client cli = banc.buscarClientPerDni(dni);
+        if (cli == null) return -1; // DNI no existeix
+        return cli.getSegonsBloqueigRestants();
+    }
+
+    /**
      * Llista tots els comptes que té el client que ara mateix està davant del caixer.
      */
     public boolean mostrarComptes() {
@@ -44,6 +75,17 @@ public class Caixer {
         banc.mostrarComptesClient(clientConnectat.getDni(), clientConnectat.getPin());
         return true;
     }
+
+     /**
+     * Comprobar si el compte esta bloquejat.
+     */
+    public boolean estaCompteBloquejat(String numeroCompte) {
+        if (clientConnectat == null) {
+            return false;
+        }
+        return banc.estaCompteBloquejat(numeroCompte, clientConnectat);
+    }
+
 
     /**
      * Per saber en què s'ha gastat els diners el client en un compte concret.
