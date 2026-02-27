@@ -1,0 +1,61 @@
+@startuml
+title Diagrama de Seqüència — Mètode login()
+
+actor "Usuari" as USR
+participant "ATM\n(demanarLogin)" as ATM
+participant "Caixer\n(login)" as CAI
+participant "Banc\n(buscarClient)" as BAN
+participant "Client\n(comprovarPin)" as CLI
+
+== Flux Principal (Login correcte) ==
+
+USR -> ATM : Introdueix DNI + PIN
+activate ATM
+
+ATM -> CAI : login(dni, pin)
+activate CAI
+
+CAI -> BAN : buscarClient(dni, pin)
+activate BAN
+
+note over BAN : Recorre l'array\nde clients cercant\nel DNI coincident
+
+BAN -> CLI : comprovarPin(pin)
+activate CLI
+
+alt Client bloquejat
+    CLI --> BAN : false (compte bloquejat)
+else PIN incorrecte
+    CLI -> CLI : intentsFallits++
+    alt intentsFallits >= 3
+        CLI -> CLI : bloquejat = true
+        CLI --> BAN : false
+    else intentsFallits < 3
+        CLI --> BAN : false
+    end
+else PIN correcte
+    CLI -> CLI : intentsFallits = 0
+    CLI --> BAN : true
+end
+
+deactivate CLI
+
+alt DNI no trobat o PIN incorrecte
+    BAN --> CAI : null
+    deactivate BAN
+    CAI -> CAI : clientConnectat = null
+    CAI --> ATM : false
+    ATM --> USR : "Dades incorrectes..."
+    ATM -> ATM : Repeteix bucle do-while
+else DNI trobat i PIN correcte
+    BAN --> CAI : Client (objecte)
+    deactivate BAN
+    CAI -> CAI : clientConnectat = client
+    CAI --> ATM : true
+    deactivate CAI
+    ATM --> USR : "Tot correcte. Hola de nou!"
+    ATM -> ATM : correcte = true\n(surt del bucle)
+end
+
+deactivate ATM
+@enduml
