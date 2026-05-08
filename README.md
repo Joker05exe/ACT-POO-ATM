@@ -41,9 +41,9 @@ Flux complet de l'operació d'ingrés: autenticació prèvia, selecció de compt
 
 ## Diagrama de Seqüència: INGRESSAR (Després refactorització amb `EstatLogin`)
 
-> Disponible a la branca [`refactor-login-estats`](../../tree/refactor-login-estats)
-
 Versió millorada on `validarClient()` retorna un objecte `EstatLogin` en lloc d'un booleà. El fragment `alt` mostra les 4 branques possibles: `CORRECTE`, `PIN_INCORRECTE`, `BLOQUEJAT` i `NO_EXISTEIX`.
+
+![Diagrama de Seqüència Ingressar refactoritzat](UML/img/FluxeDeExecucioINGRESSAR_EstatLogin.png)
 
 ---
 
