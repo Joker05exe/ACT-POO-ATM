@@ -24,13 +24,12 @@ public class Caixer {
      * Mètode per validar l'usuari. Si el banc el troba, el "recordo" durant la sessió.
      */
     public boolean login(String dni, String PIN) {
-        clientConnectat = banc.buscarClient(dni, PIN);
-
-        // Si el banc no em retorna cap client, el login ha fallat
-        if (clientConnectat == null) {
+        if (!banc.validarClient(dni, PIN)) {
+            clientConnectat = null;
             return false;
         }
-        return true;
+        clientConnectat = banc.buscarClient(dni, PIN);
+        return clientConnectat != null;
     }
 
     /**

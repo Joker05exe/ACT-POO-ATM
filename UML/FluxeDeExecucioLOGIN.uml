@@ -4,10 +4,10 @@ title Diagrama de Seqüència — Mètode login()
 actor "Usuari" as USR
 participant "ATM\n(demanarLogin)" as ATM
 participant "Caixer\n(login)" as CAI
-participant "Banc\n(buscarClient)" as BAN
+participant "Banc\n(validarClient)" as BAN
 participant "Client\n(comprovarPin)" as CLI
 
-== Flux Principal (Login correcte) ==
+== Flux Principal (Login) ==
 
 USR -> ATM : Introdueix DNI + PIN
 activate ATM
@@ -15,7 +15,7 @@ activate ATM
 ATM -> CAI : login(dni, pin)
 activate CAI
 
-CAI -> BAN : buscarClient(dni, pin)
+CAI -> BAN : validarClient(dni, pin)
 activate BAN
 
 note over BAN : Recorre l'array\nde clients cercant\nel DNI coincident
@@ -24,7 +24,7 @@ BAN -> CLI : comprovarPin(pin)
 activate CLI
 
 alt Client bloquejat
-    CLI --> BAN : false (compte bloquejat)
+    CLI --> BAN : false
 else PIN incorrecte
     CLI -> CLI : intentsFallits++
     alt intentsFallits >= 3
@@ -41,16 +41,20 @@ end
 deactivate CLI
 
 alt DNI no trobat o PIN incorrecte
-    BAN --> CAI : null
+    BAN --> CAI : false
     deactivate BAN
     CAI -> CAI : clientConnectat = null
     CAI --> ATM : false
     ATM --> USR : "Dades incorrectes..."
     ATM -> ATM : Repeteix bucle do-while
 else DNI trobat i PIN correcte
+    BAN --> CAI : true
+    deactivate BAN
+    CAI -> BAN : buscarClient(dni, pin)
+    activate BAN
     BAN --> CAI : Client (objecte)
     deactivate BAN
-    CAI -> CAI : clientConnectat = client
+    CAI -> CAI : clientConnectat = Client
     CAI --> ATM : true
     deactivate CAI
     ATM --> USR : "Tot correcte. Hola de nou!"

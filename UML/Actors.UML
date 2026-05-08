@@ -1,27 +1,27 @@
 @startuml
 left to right direction
-actor Client
+actor "Client" as CLI
 
-rectangle {
-
-usecase "Login" as LOGIN
-usecase "Extreure" as UC1
-usecase "Ingressar" as UC2
-usecase "Fer Transferencia" as UC3
-usecase "Llistar Comptes" as UC4
-usecase "Llistar moviments" as UC5
-
+rectangle "Sistema ATM" {
+    usecase "Login" as LOGIN
+    usecase "Validar Credencials" as VALID
+    usecase "Extreure" as UC1
+    usecase "Ingressar" as UC2
+    usecase "Fer Transferència" as UC3
+    usecase "Llistar Comptes" as UC4
+    usecase "Llistar Moviments" as UC5
 }
 
-"Client" --> LOGIN
-"Client" --> UC1
-"Client" --> UC2
-"Client" --> UC3
-"Client" --> UC4
-"Client" --> UC5
+CLI --> LOGIN
+CLI --> UC1
+CLI --> UC2
+CLI --> UC3
+CLI --> UC4
+CLI --> UC5
 
-UC1 --> UC4 : <<include>>
-UC2 --> UC4 : <<include>>
-UC3 --> UC4 : <<include>>
-UC5 --> UC4 : <<include>>
+LOGIN ..> VALID : <<include>>
+UC1 ..> UC4 : <<include>>
+UC2 ..> UC4 : <<include>>
+UC3 ..> UC4 : <<include>>
+UC5 ..> UC4 : <<include>>
 @enduml
