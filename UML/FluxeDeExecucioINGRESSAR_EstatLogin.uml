@@ -1,0 +1,102 @@
+@startuml
+title Diagrama de Seqüència — Operació INGRESSAR (Després refactorització amb EstatLogin)
+
+actor "Usuari" as USR
+participant "ATM" as ATM
+participant "Caixer" as CAI
+participant "Banc" as BAN
+participant "Client" as CLI
+participant "Compte" as COM
+participant "Moviment" as MOV
+
+== Autenticació amb EstatLogin (millora respecte a boolean) ==
+
+USR -> ATM : Introdueix DNI + PIN
+activate ATM
+ATM -> CAI : login(dni, pin)
+activate CAI
+
+CAI -> BAN : validarClient(dni, pin)
+activate BAN
+BAN -> CLI : comprovarPin(pin)
+activate CLI
+CLI --> BAN : boolean
+deactivate CLI
+
+alt estat == NO_EXISTEIX
+    BAN --> CAI : EstatLogin.NO_EXISTEIX
+    CAI -> CAI : clientConnectat = null
+    CAI --> ATM : false
+    ATM --> USR : "Client no existeix"
+else estat == BLOQUEJAT
+    BAN --> CAI : EstatLogin.BLOQUEJAT
+    CAI -> CAI : clientConnectat = null
+    CAI --> ATM : false
+    ATM --> USR : "Compte bloquejat. Contacteu amb el banc"
+else estat == PIN_INCORRECTE
+    BAN --> CAI : EstatLogin.PIN_INCORRECTE
+    CAI -> CAI : clientConnectat = null
+    CAI --> ATM : false
+    ATM --> USR : "PIN incorrecte. Torneu a provar"
+    ATM -> ATM : Repeteix do-while
+else estat == CORRECTE
+    BAN --> CAI : EstatLogin.CORRECTE
+    deactivate BAN
+    CAI -> BAN : buscarClient(dni, pin)
+    activate BAN
+    BAN --> CAI : Client (objecte)
+    deactivate BAN
+    CAI -> CAI : clientConnectat = Client
+    CAI --> ATM : true
+    deactivate CAI
+    ATM --> USR : "Autenticació correcta!"
+end
+
+== Operació Ingressar ==
+
+USR -> ATM : Selecciona compte + introdueix quantitat
+ATM -> CAI : ingressar(numero, quantitat)
+activate CAI
+
+alt clientConnectat == null
+    CAI --> ATM : false
+    ATM --> USR : "Cal iniciar sessió primer"
+else client autenticat
+    CAI -> BAN : ingressar(numero, quantitat)
+    activate BAN
+
+    BAN -> BAN : cerca compte per número
+
+    alt compte no trobat
+        BAN --> CAI : false
+        CAI --> ATM : false
+        ATM --> USR : "Compte no trobat"
+    else compte trobat
+        BAN -> COM : ingressar(quantitat)
+        activate COM
+
+        alt quantitat <= 0
+            COM --> BAN : false
+            BAN --> CAI : false
+            CAI --> ATM : false
+            ATM --> USR : "La quantitat ha de ser positiva"
+        else quantitat vàlida
+            COM -> COM : saldo += quantitat
+            COM -> MOV ** : new Moviment("Ingres", INGRES, quantitat)
+            activate MOV
+            MOV --> COM : moviment creat
+            deactivate MOV
+            COM -> COM : moviments.add(moviment)
+            COM --> BAN : true
+            deactivate COM
+            BAN --> CAI : true
+            deactivate BAN
+            CAI --> ATM : true
+            ATM --> USR : "Ingrés completat correctament"
+        end
+    end
+end
+
+deactivate CAI
+deactivate ATM
+@enduml

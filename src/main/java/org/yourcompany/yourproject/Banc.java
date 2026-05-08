@@ -54,11 +54,23 @@ public class Banc {
     // --- MÈTODES PER BUSCAR I VALIDAR ---
 
     /**
-     * Només diu si el client existeix o no (true/false).
+     * Retorna l'estat del login: CORRECTE, PIN_INCORRECTE, BLOQUEJAT o NO_EXISTEIX.
+     * Reutilitza comprovarPin() del Client per no duplicar la lògica de validació.
      */
-    public boolean validarClient(String dni, String pin) {
-        // Si buscarClient ens torna alguna cosa que NO és nul, és que és vàlid
-        return buscarClient(dni, pin) != null;
+    public EstatLogin validarClient(String dni, String pin) {
+        for (Client cli : clients) {
+            if (cli != null && cli.getDni().equals(dni)) {
+                if (cli.isBloquejat()) {
+                    return EstatLogin.BLOQUEJAT;
+                }
+                boolean pinCorrecte = cli.comprovarPin(pin);
+                if (pinCorrecte) {
+                    return EstatLogin.CORRECTE;
+                }
+                return cli.isBloquejat() ? EstatLogin.BLOQUEJAT : EstatLogin.PIN_INCORRECTE;
+            }
+        }
+        return EstatLogin.NO_EXISTEIX;
     }
 
     /**

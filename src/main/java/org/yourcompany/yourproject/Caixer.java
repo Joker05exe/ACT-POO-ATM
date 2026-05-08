@@ -24,7 +24,8 @@ public class Caixer {
      * Mètode per validar l'usuari. Si el banc el troba, el "recordo" durant la sessió.
      */
     public boolean login(String dni, String PIN) {
-        if (!banc.validarClient(dni, PIN)) {
+        EstatLogin estat = banc.validarClient(dni, PIN);
+        if (estat != EstatLogin.CORRECTE) {
             clientConnectat = null;
             return false;
         }
